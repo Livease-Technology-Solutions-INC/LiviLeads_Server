@@ -13,7 +13,7 @@ const whitelist = ['http://localhost:3000'];
 const invalidTokens = [];
 if (!process.env.JWT_SECRET) {
 	console.error('JWT_SECRET is not defined in the environment variables.');
-	process.exit(1); // Exit the process with an error code
+	process.exit(1); 
 }
 const corsOptions = {
 	origin: (origin, callback) => {
@@ -49,7 +49,8 @@ app.post('/register', async (req, res) => {
 
 	try {
 		// Check if the email is already registered
-		const existingUser = await User.findOne({ email });
+		const existingUser = await User.findOne({ email }).maxTimeMS(20000);
+		
 
 		if (existingUser) {
 			// Return 409 status if the email is already registered
@@ -59,7 +60,7 @@ app.post('/register', async (req, res) => {
 		const hashedPassword = await bcrypt.hash(password, 10);
 
 		// Check if the username is already in use
-		const existingUsername = await User.findOne({ username });
+		const existingUsername = await User.findOne({ username }).maxTimeMS(20000);
 
 		if (existingUsername) {
 			// Return 409 status if the username is already in use
@@ -82,7 +83,7 @@ app.post('/login', async (req, res) => {
 
 	try {
 		// Check if the user exists in the database
-		const user = await User.findOne({ email });
+		const user = await User.findOne({ email }).maxTimeMS(20000);
 
 		// Verify the password
 		if (!user || !(await bcrypt.compare(password, user.password))) {
@@ -110,8 +111,6 @@ app.post('/logout', (req, res) => {
 				.json({ message: 'Unauthorized - No token provided' });
 		}
 
-		// Invalidate or blacklist the token on the server side
-		// Here, we're just using an in-memory array as an example
 		invalidTokens.push(token);
 
 		res.status(200).json({ message: 'Logout successful' });
